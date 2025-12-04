@@ -19,6 +19,7 @@ interface UseWebSocketReturn {
   connect: () => Promise<void>;
   disconnect: () => void;
   send: (message: WSMessage) => boolean;
+  sendMessage: (message: WSMessage) => boolean; // Alias for send
   subscribe: (type: string, handler: (message: WSMessage) => void) => () => void;
 }
 
@@ -104,6 +105,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     connect,
     disconnect,
     send,
+    sendMessage: send, // Alias for send
     subscribe,
   };
 }

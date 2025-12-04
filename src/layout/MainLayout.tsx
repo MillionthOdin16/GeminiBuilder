@@ -13,6 +13,7 @@ import {
   ListItemText,
   CssBaseline,
   Chip,
+  ListSubheader,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -24,27 +25,60 @@ import {
   Chat as ChatIcon,
   Folder as FolderIcon,
   Storage as MCPIcon,
+  Terminal as TerminalIcon,
+  AccountTree as GitIcon,
+  FolderSpecial as ProjectIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import DownloadManager from './DownloadManager';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
-const menuItems = [
+const coreMenuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-  { text: 'Chat / REPL', icon: <ChatIcon />, path: '/chat', isNew: true },
-  { text: 'Code Editor', icon: <FolderIcon />, path: '/editor', isNew: true },
+  { text: 'Chat / REPL', icon: <ChatIcon />, path: '/chat' },
+  { text: 'Code Editor', icon: <FolderIcon />, path: '/editor' },
+  { text: 'Terminal', icon: <TerminalIcon />, path: '/terminal', isNew: true },
+  { text: 'Git', icon: <GitIcon />, path: '/git', isNew: true },
+  { text: 'Projects', icon: <ProjectIcon />, path: '/projects', isNew: true },
+];
+
+const configMenuItems = [
   { text: 'Context (GEMINI.md)', icon: <DescriptionIcon />, path: '/context' },
   { text: 'Settings (settings.json)', icon: <SettingsIcon />, path: '/settings' },
   { text: 'Agent Skills', icon: <SkillIcon />, path: '/skills' },
   { text: 'Custom Commands', icon: <CodeIcon />, path: '/commands' },
+];
+
+const integrationsMenuItems = [
   { text: 'Extensions', icon: <ExtensionIcon />, path: '/extensions' },
-  { text: 'MCP Servers', icon: <MCPIcon />, path: '/mcp', isNew: true },
+  { text: 'MCP Servers', icon: <MCPIcon />, path: '/mcp' },
 ];
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const renderMenuItems = (items: typeof coreMenuItems) => (
+    items.map((item) => (
+      <ListItem key={item.text} disablePadding>
+        <ListItemButton
+          selected={location.pathname === item.path}
+          onClick={() => navigate(item.path)}
+          sx={{ py: 0.5 }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+          <ListItemText 
+            primary={item.text}
+            primaryTypographyProps={{ fontSize: '0.875rem' }}
+          />
+          {item.isNew && (
+            <Chip label="New" size="small" color="primary" sx={{ height: 20, fontSize: '0.7rem' }} />
+          )}
+        </ListItemButton>
+      </ListItem>
+    ))
+  );
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -77,21 +111,19 @@ export default function Layout() {
             </Typography>
         </Toolbar>
         <Divider />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding>
-              <ListItemButton
-                selected={location.pathname === item.path}
-                onClick={() => navigate(item.path)}
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-                {item.isNew && (
-                  <Chip label="New" size="small" color="primary" sx={{ ml: 1 }} />
-                )}
-              </ListItemButton>
-            </ListItem>
-          ))}
+        <List dense>
+          <ListSubheader sx={{ bgcolor: 'transparent' }}>Core</ListSubheader>
+          {renderMenuItems(coreMenuItems)}
+        </List>
+        <Divider />
+        <List dense>
+          <ListSubheader sx={{ bgcolor: 'transparent' }}>Configuration</ListSubheader>
+          {renderMenuItems(configMenuItems)}
+        </List>
+        <Divider />
+        <List dense>
+          <ListSubheader sx={{ bgcolor: 'transparent' }}>Integrations</ListSubheader>
+          {renderMenuItems(integrationsMenuItems)}
         </List>
       </Drawer>
       <Box

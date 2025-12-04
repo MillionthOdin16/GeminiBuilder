@@ -152,8 +152,8 @@ export class SettingsManager {
         merged.telemetry = { ...current.telemetry, ...value };
       } else if (key === 'codeExecution' && typeof value === 'object') {
         merged.codeExecution = { ...current.codeExecution, ...value };
-      } else if (key === 'mcpServers' && typeof value === 'object') {
-        merged.mcpServers = { ...current.mcpServers, ...value };
+      } else if (key === 'mcpServers' && typeof value === 'object' && !Array.isArray(value)) {
+        merged.mcpServers = { ...current.mcpServers, ...(value as Record<string, MCPServerConfig>) };
       } else {
         (merged as Record<string, unknown>)[key] = value;
       }

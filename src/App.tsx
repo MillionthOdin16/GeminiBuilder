@@ -10,6 +10,9 @@ import SkillsBuilder from './views/SkillsBuilder';
 import ChatView from './views/ChatView';
 import MCPServersView from './views/MCPServersView';
 import EditorView from './views/EditorView';
+import GitView from './views/GitView';
+import TerminalView from './views/TerminalView';
+import ProjectsView from './views/ProjectsView';
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
           <Route path="commands" element={<CommandBuilder />} />
           <Route path="extensions" element={<ExtensionsManager />} />
           <Route path="mcp" element={<MCPServersView />} />
+          <Route path="git" element={<GitView />} />
+          <Route path="terminal" element={<TerminalView />} />
+          <Route path="projects" element={<ProjectsView />} />
         </Route>
       </Routes>
     </BrowserRouter>
