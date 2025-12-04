@@ -131,6 +131,7 @@ export default function Terminal({
     if (initialCommand && isConnected) {
       executeCommand(initialCommand);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCommand, isConnected]);
 
   // Execute command

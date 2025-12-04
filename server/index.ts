@@ -886,7 +886,7 @@ app.post('/api/conversations/:id/duplicate', async (req: Request, res: Response)
 // Auth API
 // ============================================
 
-app.post('/api/auth/login', async (req: Request, res: Response) => {
+app.post('/api/auth/login', rateLimiters.auth.middleware(), async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
     const result = await authManager.login(username, password, {
@@ -900,7 +900,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/refresh', async (req: Request, res: Response) => {
+app.post('/api/auth/refresh', rateLimiters.auth.middleware(), async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
     const tokens = await authManager.refreshToken(refreshToken);
@@ -911,7 +911,7 @@ app.post('/api/auth/refresh', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/logout', authMiddleware(true), async (req: Request, res: Response) => {
+app.post('/api/auth/logout', rateLimiters.auth.middleware(), authMiddleware(true), async (req: Request, res: Response) => {
   try {
     await authManager.logout((req as unknown as { sessionId: string }).sessionId);
     res.json({ success: true });
@@ -921,11 +921,11 @@ app.post('/api/auth/logout', authMiddleware(true), async (req: Request, res: Res
   }
 });
 
-app.get('/api/auth/me', authMiddleware(true), (req: Request, res: Response) => {
+app.get('/api/auth/me', rateLimiters.general.middleware(), authMiddleware(true), (req: Request, res: Response) => {
   res.json({ user: (req as unknown as { user: unknown }).user });
 });
 
-app.post('/api/auth/change-password', authMiddleware(true), async (req: Request, res: Response) => {
+app.post('/api/auth/change-password', rateLimiters.auth.middleware(), authMiddleware(true), async (req: Request, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const user = (req as unknown as { user: { id: string } }).user;
@@ -941,7 +941,7 @@ app.post('/api/auth/change-password', authMiddleware(true), async (req: Request,
 // API Keys API (protected)
 // ============================================
 
-app.get('/api/apikeys', authMiddleware(true), (_req: Request, res: Response) => {
+app.get('/api/apikeys', rateLimiters.general.middleware(), authMiddleware(true), (_req: Request, res: Response) => {
   try {
     const keys = authManager.listApiKeys();
     res.json({ keys });
@@ -951,7 +951,7 @@ app.get('/api/apikeys', authMiddleware(true), (_req: Request, res: Response) => 
   }
 });
 
-app.post('/api/apikeys', authMiddleware(true), async (req: Request, res: Response) => {
+app.post('/api/apikeys', rateLimiters.general.middleware(), authMiddleware(true), async (req: Request, res: Response) => {
   try {
     const { name, value } = req.body;
     const id = await authManager.storeApiKey(name, value);
@@ -962,7 +962,7 @@ app.post('/api/apikeys', authMiddleware(true), async (req: Request, res: Respons
   }
 });
 
-app.delete('/api/apikeys/:id', authMiddleware(true), async (req: Request, res: Response) => {
+app.delete('/api/apikeys/:id', rateLimiters.general.middleware(), authMiddleware(true), async (req: Request, res: Response) => {
   try {
     await authManager.deleteApiKey(req.params.id);
     res.json({ success: true });
