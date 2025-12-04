@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   CssBaseline,
+  Chip,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -20,6 +21,9 @@ import {
   Code as CodeIcon,
   Extension as ExtensionIcon,
   Psychology as SkillIcon,
+  Chat as ChatIcon,
+  Folder as FolderIcon,
+  Storage as MCPIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import DownloadManager from './DownloadManager';
@@ -28,11 +32,14 @@ const drawerWidth = 240;
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+  { text: 'Chat / REPL', icon: <ChatIcon />, path: '/chat', isNew: true },
+  { text: 'Code Editor', icon: <FolderIcon />, path: '/editor', isNew: true },
   { text: 'Context (GEMINI.md)', icon: <DescriptionIcon />, path: '/context' },
   { text: 'Settings (settings.json)', icon: <SettingsIcon />, path: '/settings' },
   { text: 'Agent Skills', icon: <SkillIcon />, path: '/skills' },
   { text: 'Custom Commands', icon: <CodeIcon />, path: '/commands' },
   { text: 'Extensions', icon: <ExtensionIcon />, path: '/extensions' },
+  { text: 'MCP Servers', icon: <MCPIcon />, path: '/mcp', isNew: true },
 ];
 
 export default function Layout() {
@@ -48,7 +55,7 @@ export default function Layout() {
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="div">
-            Gemini CLI Configurator
+            GeminiBuilder - Enterprise Gemini CLI Interface
           </Typography>
         </Toolbar>
       </AppBar>
@@ -66,7 +73,7 @@ export default function Layout() {
       >
         <Toolbar>
             <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                Gemini Tools
+                GeminiBuilder
             </Typography>
         </Toolbar>
         <Divider />
@@ -79,6 +86,9 @@ export default function Layout() {
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
+                {item.isNew && (
+                  <Chip label="New" size="small" color="primary" sx={{ ml: 1 }} />
+                )}
               </ListItemButton>
             </ListItem>
           ))}

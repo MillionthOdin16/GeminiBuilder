@@ -16,7 +16,7 @@ export interface Settings {
     env?: Record<string, string>;
   }>;
   // Allow other keys
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface CustomCommand {
@@ -38,7 +38,7 @@ export interface Extension {
     name: string;
     description: string;
     url: string;
-    mcpConfig?: Record<string, any>; // If adding this extension adds MCP config
+    mcpConfig?: Record<string, unknown>; // If adding this extension adds MCP config
 }
 
 export interface SkillFile {
@@ -80,5 +80,5 @@ export interface AppState {
     updateSkill: (id: string, skill: Partial<AgentSkill>) => void;
     removeSkill: (id: string) => void;
 
-    loadPersona: (persona: any) => void; // Using 'any' briefly to avoid circular deps or complex import in types.ts, or better define interface here
+    loadPersona: (persona: { settings?: Partial<Settings>; contextSections: ContextSection[]; skills: AgentSkill[]; commands: CustomCommand[] }) => void;
 }
