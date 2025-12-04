@@ -28,6 +28,8 @@ import {
   Terminal as TerminalIcon,
   AccountTree as GitIcon,
   FolderSpecial as ProjectIcon,
+  Lightbulb as TemplateIcon,
+  DataObject as SnippetIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import DownloadManager from './DownloadManager';
@@ -38,9 +40,14 @@ const coreMenuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Chat / REPL', icon: <ChatIcon />, path: '/chat' },
   { text: 'Code Editor', icon: <FolderIcon />, path: '/editor' },
-  { text: 'Terminal', icon: <TerminalIcon />, path: '/terminal', isNew: true },
-  { text: 'Git', icon: <GitIcon />, path: '/git', isNew: true },
-  { text: 'Projects', icon: <ProjectIcon />, path: '/projects', isNew: true },
+  { text: 'Terminal', icon: <TerminalIcon />, path: '/terminal' },
+  { text: 'Git', icon: <GitIcon />, path: '/git' },
+  { text: 'Projects', icon: <ProjectIcon />, path: '/projects' },
+];
+
+const toolsMenuItems = [
+  { text: 'Prompt Templates', icon: <TemplateIcon />, path: '/templates', isNew: true },
+  { text: 'Code Snippets', icon: <SnippetIcon />, path: '/snippets', isNew: true },
 ];
 
 const configMenuItems = [

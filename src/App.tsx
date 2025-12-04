@@ -13,6 +13,8 @@ import EditorView from './views/EditorView';
 import GitView from './views/GitView';
 import TerminalView from './views/TerminalView';
 import ProjectsView from './views/ProjectsView';
+import TemplatesView from './views/TemplatesView';
+import SnippetsView from './views/SnippetsView';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
           <Route path="git" element={<GitView />} />
           <Route path="terminal" element={<TerminalView />} />
           <Route path="projects" element={<ProjectsView />} />
+          <Route path="templates" element={<TemplatesView />} />
+          <Route path="snippets" element={<SnippetsView />} />
         </Route>
       </Routes>
     </BrowserRouter>
