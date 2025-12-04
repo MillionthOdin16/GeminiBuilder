@@ -34,7 +34,7 @@ export default function SettingsBuilder() {
     }
   };
 
-  const handleTextChange = (key: keyof Settings | string, value: any, subKey?: string) => {
+  const handleTextChange = (key: keyof Settings | string, value: string | boolean | undefined, subKey?: string) => {
      if (subKey && key === 'telemetry') {
         updateSettings({
            telemetry: { ...settings.telemetry, [subKey]: value }
