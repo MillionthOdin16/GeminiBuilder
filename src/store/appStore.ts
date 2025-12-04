@@ -1,14 +1,22 @@
 import { create } from 'zustand';
-import type { AppState, Settings, ContextSection } from '../types';
+import type { AppState, Settings, ContextSection, Persona } from '../types';
 
 const defaultSettings: Settings = {
-  theme: 'system',
-  autoAccept: false,
+  theme: 'Default',
+  tools: {
+    autoAccept: false,
+  },
   checkpointing: {
     enabled: true,
   },
   telemetry: {
     enabled: false,
+  },
+  context: {
+    fileFiltering: {
+      respectGitIgnore: true,
+      respectGeminiIgnore: true,
+    },
   },
   includeDirectories: [],
   excludeTools: [],
@@ -133,7 +141,7 @@ export const useAppStore = create<AppState>((set) => ({
     })),
 
   // Bulk actions for Personas
-  loadPersona: (persona) => 
+  loadPersona: (persona: Persona) => 
     set((state) => ({
         settings: { ...state.settings, ...persona.settings },
         contextSections: [...state.contextSections, ...persona.contextSections],
