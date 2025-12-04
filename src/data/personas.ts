@@ -1,15 +1,7 @@
-import type { Settings, ContextSection, AgentSkill, CustomCommand } from '../types';
+import type { Persona } from '../types';
 import { CURATED_SKILLS } from './marketplace';
 
-export interface Persona {
-    id: string;
-    name: string;
-    description: string;
-    settings: Partial<Settings>;
-    contextSections: ContextSection[];
-    skills: AgentSkill[];
-    commands: CustomCommand[];
-}
+export type { Persona };
 
 export const PERSONAS: Persona[] = [
     {
@@ -17,7 +9,7 @@ export const PERSONAS: Persona[] = [
         name: 'Frontend Developer',
         description: 'Optimized for React, TypeScript, and UI development. Includes strict linting context and component generators.',
         settings: {
-            theme: 'dark',
+            theme: 'Dracula',
             excludeTools: ['run_shell_command'], // Safer default
         },
         contextSections: [
@@ -49,8 +41,10 @@ export const PERSONAS: Persona[] = [
         name: 'Backend Engineer',
         description: 'Setup for Node.js/Python backend work. includes database helpers and API design context.',
         settings: {
-            theme: 'system',
-            autoAccept: false
+            theme: 'Default',
+            tools: {
+                autoAccept: false
+            }
         },
         contextSections: [
             {
@@ -84,8 +78,10 @@ export const PERSONAS: Persona[] = [
         name: 'Data Scientist',
         description: 'configured for Python, Pandas, and Jupyter. Includes data analysis skills and "YOLO" mode for quick experimentation.',
         settings: {
-            theme: 'light',
-            autoAccept: true, // YOLO for rapid notebook style work
+            theme: 'Default Light',
+            tools: {
+                autoAccept: true, // YOLO for rapid notebook style work
+            }
         },
         contextSections: [
             {

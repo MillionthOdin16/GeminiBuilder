@@ -1,6 +1,96 @@
+// All available Gemini CLI themes
+export type GeminiTheme = 
+  | 'ANSI' 
+  | 'Atom One' 
+  | 'Ayu' 
+  | 'Default' 
+  | 'Dracula' 
+  | 'GitHub'
+  | 'ANSI Light' 
+  | 'Ayu Light' 
+  | 'Default Light' 
+  | 'GitHub Light' 
+  | 'Google Code' 
+  | 'Xcode';
+
+export interface McpServer {
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+}
+
 export interface Settings {
-  theme?: 'system' | 'light' | 'dark' | 'GitHub';
-  autoAccept?: boolean; // YOLO mode
+  // UI Settings
+  theme?: GeminiTheme;
+  ui?: {
+    hideWindowTitle?: boolean;
+    showStatusInTitle?: boolean;
+    hideTips?: boolean;
+    hideBanner?: boolean;
+    hideContextSummary?: boolean;
+    hideFooter?: boolean;
+    showMemoryUsage?: boolean;
+    showLineNumbers?: boolean;
+    showCitations?: boolean;
+    useFullWidth?: boolean;
+    useAlternateBuffer?: boolean;
+    footer?: {
+      hideCWD?: boolean;
+      hideSandboxStatus?: boolean;
+      hideModelInfo?: boolean;
+      hideContextPercentage?: boolean;
+    };
+    accessibility?: {
+      disableLoadingPhrases?: boolean;
+      screenReader?: boolean;
+    };
+  };
+  
+  // Tools Settings
+  tools?: {
+    autoAccept?: boolean; // YOLO mode
+    useRipgrep?: boolean;
+    enableToolOutputTruncation?: boolean;
+    truncateToolOutputThreshold?: number;
+    truncateToolOutputLines?: number;
+    shell?: {
+      enableInteractiveShell?: boolean;
+      showColor?: boolean;
+    };
+  };
+  
+  // Security Settings
+  security?: {
+    disableYoloMode?: boolean;
+    blockGitExtensions?: boolean;
+    folderTrust?: {
+      enabled?: boolean;
+    };
+  };
+  
+  // Context Settings
+  context?: {
+    fileName?: string[];
+    discoveryMaxDirs?: number;
+    loadMemoryFromIncludeDirectories?: boolean;
+    fileFiltering?: {
+      respectGitIgnore?: boolean;
+      respectGeminiIgnore?: boolean;
+      enableRecursiveFileSearch?: boolean;
+      disableFuzzySearch?: boolean;
+    };
+  };
+  
+  // Model Settings
+  model?: {
+    maxSessionTurns?: number;
+    compressionThreshold?: number;
+    skipNextSpeakerCheck?: boolean;
+  };
+  
+  // Legacy/simplified settings (for backwards compatibility)
+  autoAccept?: boolean; // YOLO mode shortcut
   checkpointing?: {
     enabled?: boolean;
   };
@@ -10,13 +100,10 @@ export interface Settings {
   };
   includeDirectories?: string[];
   excludeTools?: string[];
-  mcpServers?: Record<string, {
-    command: string;
-    args?: string[];
-    env?: Record<string, string>;
-  }>;
-  // Allow other keys
-  [key: string]: any;
+  mcpServers?: Record<string, McpServer>;
+  
+  // Allow other keys for extensibility
+  [key: string]: unknown;
 }
 
 export interface CustomCommand {
@@ -38,7 +125,7 @@ export interface Extension {
     name: string;
     description: string;
     url: string;
-    mcpConfig?: Record<string, any>; // If adding this extension adds MCP config
+    mcpConfig?: Record<string, unknown>; // If adding this extension adds MCP config
 }
 
 export interface SkillFile {
@@ -53,6 +140,16 @@ export interface AgentSkill {
     description: string;
     instructions: string; // The markdown body of SKILL.md
     files: SkillFile[];
+}
+
+export interface Persona {
+    id: string;
+    name: string;
+    description: string;
+    settings: Partial<Settings>;
+    contextSections: ContextSection[];
+    skills: AgentSkill[];
+    commands: CustomCommand[];
 }
 
 export interface AppState {
@@ -80,5 +177,5 @@ export interface AppState {
     updateSkill: (id: string, skill: Partial<AgentSkill>) => void;
     removeSkill: (id: string) => void;
 
-    loadPersona: (persona: any) => void; // Using 'any' briefly to avoid circular deps or complex import in types.ts, or better define interface here
+    loadPersona: (persona: Persona) => void;
 }

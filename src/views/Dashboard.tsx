@@ -3,13 +3,14 @@ import { Typography, Box, Card, CardActionArea, Chip, Paper, Button } from '@mui
 import { useAppStore } from '../store/appStore';
 import { useNavigate } from 'react-router-dom';
 import { PERSONAS } from '../data/personas';
+import type { Persona } from '../types';
 import { RocketLaunch as RocketIcon, Person as PersonIcon } from '@mui/icons-material';
 
 export default function Dashboard() {
     const { settings, contextSections, commands, loadPersona } = useAppStore();
     const navigate = useNavigate();
 
-    const handleLoadPersona = (persona: any) => {
+    const handleLoadPersona = (persona: Persona) => {
         if (confirm(`Load "${persona.name}" persona? This will append to your current configuration.`)) {
             loadPersona(persona);
         }
