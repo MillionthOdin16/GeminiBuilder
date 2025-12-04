@@ -1,146 +1,323 @@
-import React from 'react';
-import { Paper, Typography, Box, Button, Badge } from '@mui/material';
-import { Download as DownloadIcon } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { 
+  Paper, 
+  Typography, 
+  Box, 
+  Button, 
+  Badge, 
+  Snackbar, 
+  Alert,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Tooltip,
+  Collapse,
+  Chip,
+} from '@mui/material';
+import { 
+  Download as DownloadIcon, 
+  Upload as UploadIcon,
+  ContentCopy as CopyIcon,
+  Check as CheckIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Folder as FolderIcon,
+} from '@mui/icons-material';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { useAppStore } from '../store/appStore';
 
+const drawerWidth = 260;
+
 export default function DownloadManager() {
   const { settings, contextSections, commands, activeExtensions, skills } = useAppStore();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  const [expanded, setExpanded] = useState(!isSmall);
+  const [copied, setCopied] = useState(false);
 
   const handleDownloadZip = async () => {
-    const zip = new JSZip();
+    try {
+      const zip = new JSZip();
 
-    // 1. GEMINI.md
-    const geminiMdContent = contextSections
-      .filter((s) => s.enabled)
-      .map((s) => `# ${s.title}\n\n${s.content}`)
-      .join('\n\n');
-    zip.file('GEMINI.md', geminiMdContent);
+      // 1. GEMINI.md
+      const geminiMdContent = contextSections
+        .filter((s) => s.enabled)
+        .map((s) => `# ${s.title}\n\n${s.content}`)
+        .join('\n\n');
+      zip.file('GEMINI.md', geminiMdContent);
 
-    // 2. .gemini/settings.json
-    zip.file('.gemini/settings.json', JSON.stringify(settings, null, 2));
+      // 2. .gemini/settings.json
+      zip.file('.gemini/settings.json', JSON.stringify(settings, null, 2));
 
-    // 3. .gemini/commands/*.toml
-    if (commands.length > 0) {
+      // 3. .gemini/commands/*.toml
+      if (commands.length > 0) {
         const commandsBase = zip.folder('.gemini/commands');
         if (commandsBase) {
-            commands.forEach((cmd) => {
-                const parts = cmd.name.split(':');
-                const fileName = parts.pop() + '.toml';
-                let currentFolder = commandsBase;
-                
-                parts.forEach(part => {
-                    const next = currentFolder.folder(part);
-                    if (next) currentFolder = next;
-                });
-
-                const tomlContent = `description = "${cmd.description}"\n\nprompt = """\n${cmd.prompt}\n"""`;
-                currentFolder.file(fileName, tomlContent);
+          commands.forEach((cmd) => {
+            const parts = cmd.name.split(':');
+            const fileName = parts.pop() + '.toml';
+            let currentFolder = commandsBase;
+            
+            parts.forEach(part => {
+              const next = currentFolder.folder(part);
+              if (next) currentFolder = next;
             });
-        }
-    }
 
-    // 4. .skillz folder
-    if (skills.length > 0) {
+            const tomlContent = `description = "${cmd.description}"\n\nprompt = """\n${cmd.prompt}\n"""`;
+            currentFolder.file(fileName, tomlContent);
+          });
+        }
+      }
+
+      // 4. .skillz folder
+      if (skills.length > 0) {
         const skillsBase = zip.folder('.skillz');
         if (skillsBase) {
-            skills.forEach((skill) => {
-                const skillFolder = skillsBase.folder(skill.name);
-                if (skillFolder) {
-                    // Create SKILL.md
-                    const skillMdContent = `---
+          skills.forEach((skill) => {
+            const skillFolder = skillsBase.folder(skill.name);
+            if (skillFolder) {
+              const skillMdContent = `---
 name: ${skill.name}
 description: ${skill.description}
 ---
 
 ${skill.instructions}`;
-                    skillFolder.file('SKILL.md', skillMdContent);
+              skillFolder.file('SKILL.md', skillMdContent);
 
-                    // Create helper files
-                    skill.files.forEach((f) => {
-                        skillFolder.file(f.name, f.content);
-                    });
-                }
-            });
+              skill.files.forEach((f) => {
+                skillFolder.file(f.name, f.content);
+              });
+            }
+          });
         }
-    }
+      }
 
-    // 5. Installation Script
-    let scriptContent = `#!/bin/bash
-# Gemini Config Setup Script
+      // 5. Installation Script
+      let scriptContent = `#!/bin/bash
+# Gemini CLI Configuration Setup Script
+# Generated by Gemini CLI Configurator
+
+set -e
+
+echo "🚀 Setting up Gemini CLI configuration..."
 `;
 
-    if (activeExtensions.length > 0) {
+      if (activeExtensions.length > 0) {
         scriptContent += `
-echo "Installing Extensions..."
+echo "📦 Installing Extensions..."
 ${activeExtensions.map(ext => `gemini extensions install ${ext.url}`).join('\n')}
 `;
-    }
+      }
 
-    if (skills.length > 0) {
+      if (skills.length > 0) {
         scriptContent += `
-echo "Setting up Skills..."
+echo "🧠 Setting up Skills..."
 mkdir -p ~/.skillz
-# Copy skills from the bundled .skillz folder to ~/.skillz
-# Assuming you run this script from the unzipped folder
 if [ -d ".skillz" ]; then
     cp -r .skillz/* ~/.skillz/
-    echo "Skills installed to ~/.skillz"
+    echo "✅ Skills installed to ~/.skillz"
 else
-    echo "Warning: .skillz folder not found in current directory."
+    echo "⚠️ Warning: .skillz folder not found in current directory."
 fi
 `;
-    }
+      }
 
-    if (activeExtensions.length > 0 || skills.length > 0) {
-        zip.file('setup.sh', scriptContent);
-    }
+      scriptContent += `
+echo ""
+echo "✨ Setup complete! Your Gemini CLI is now configured."
+echo "Run 'gemini' to start using your personalized AI agent."
+`;
 
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, 'gemini-config.zip');
+      zip.file('setup.sh', scriptContent);
+
+      // 6. README
+      const readmeContent = `# Gemini CLI Configuration
+
+This bundle was generated by the Gemini CLI Configurator.
+
+## Contents
+
+- \`GEMINI.md\` - Context file with ${contextSections.filter(s => s.enabled).length} sections
+- \`.gemini/settings.json\` - CLI settings
+- \`.gemini/commands/\` - ${commands.length} custom commands
+- \`.skillz/\` - ${skills.length} agent skills
+- \`setup.sh\` - Installation script
+
+## Quick Start
+
+1. Extract this zip to your project root
+2. Run \`chmod +x setup.sh && ./setup.sh\`
+3. Start Gemini CLI with \`gemini\`
+
+## Manual Setup
+
+If you prefer manual setup:
+
+1. Copy \`GEMINI.md\` to your project root
+2. Copy \`.gemini/\` folder to your project root
+3. Copy \`.skillz/\` to \`~/.skillz/\`
+${activeExtensions.length > 0 ? `4. Install extensions:\n${activeExtensions.map(ext => `   - \`gemini extensions install ${ext.url}\``).join('\n')}` : ''}
+
+## Learn More
+
+Visit [geminicli.com](https://geminicli.com/docs/) for documentation.
+`;
+      zip.file('README.md', readmeContent);
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, 'gemini-config.zip');
+      
+      setSnackbar({ open: true, message: 'Configuration downloaded successfully!', severity: 'success' });
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Error generating download', severity: 'error' });
+    }
   };
 
-  const fileCount = 1 + 1 + commands.length + skills.length + ((activeExtensions.length > 0 || skills.length > 0) ? 1 : 0); 
+  const handleCopySettings = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(settings, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      setSnackbar({ open: true, message: 'Settings copied to clipboard!', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to copy settings', severity: 'error' });
+    }
+  };
+
+  const fileCount = 1 + 1 + commands.length + skills.length + 1 + 1; // GEMINI.md, settings.json, commands, skills, setup.sh, README
+
+  const summaryItems = [
+    { label: 'Context', count: contextSections.filter(s => s.enabled).length },
+    { label: 'Commands', count: commands.length },
+    { label: 'Skills', count: skills.length },
+    { label: 'Extensions', count: activeExtensions.length },
+  ];
 
   return (
-    <Paper
-      sx={{
-        position: 'fixed',
-        bottom: 0,
-        left: 240, // Match drawer width
-        right: 0,
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        bgcolor: 'background.paper',
-        borderTop: '1px solid #e0e0e0',
-        zIndex: 1000,
-      }}
-      elevation={3}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Badge badgeContent={fileCount} color="primary">
-            <DescriptionIconWrapper />
-        </Badge>
-        <Typography variant="body1">
-          <strong>Ready to download:</strong> GEMINI.md, settings.json, {commands.length} Custom Commands
-        </Typography>
-      </Box>
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<DownloadIcon />}
-        onClick={handleDownloadZip}
+    <>
+      <Paper
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: { xs: 0, md: drawerWidth },
+          right: 0,
+          p: { xs: 1.5, sm: 2 },
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: { xs: 1, sm: 2 },
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          zIndex: 1000,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+        }}
+        elevation={3}
       >
-        Download All (.zip)
-      </Button>
-    </Paper>
-  );
-}
+        {/* Summary Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+          <Tooltip title={`${fileCount} files ready`}>
+            <Badge badgeContent={fileCount} color="primary">
+              <FolderIcon color="action" />
+            </Badge>
+          </Tooltip>
+          
+          {isSmall ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" fontWeight={500}>
+                Ready to download
+              </Typography>
+              <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+                {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {summaryItems.map((item) => (
+                <Chip
+                  key={item.label}
+                  label={`${item.count} ${item.label}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ 
+                    fontSize: '0.75rem',
+                    opacity: item.count > 0 ? 1 : 0.5 
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
 
-function DescriptionIconWrapper() {
-    // Just a placeholder for the icon in badge to avoid circular dependency or extra imports if not needed
-    return <Box sx={{ width: 24, height: 24, bgcolor: 'primary.main', borderRadius: '50%' }} />;
+        {/* Expanded details for mobile */}
+        {isSmall && (
+          <Collapse in={expanded}>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
+              {summaryItems.map((item) => (
+                <Chip
+                  key={item.label}
+                  label={`${item.count} ${item.label}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: '0.7rem' }}
+                />
+              ))}
+            </Box>
+          </Collapse>
+        )}
+
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Copy settings.json">
+            <IconButton 
+              onClick={handleCopySettings} 
+              color={copied ? 'success' : 'default'}
+              size={isSmall ? 'small' : 'medium'}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+            </IconButton>
+          </Tooltip>
+          
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadZip}
+            size={isSmall ? 'small' : 'medium'}
+            sx={{
+              background: 'linear-gradient(135deg, #1a73e8 0%, #6c47ff 100%)',
+              fontWeight: 600,
+              px: { xs: 2, sm: 3 },
+            }}
+          >
+            {isSmall ? 'Download' : 'Download Bundle'}
+          </Button>
+        </Box>
+      </Paper>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
 }
